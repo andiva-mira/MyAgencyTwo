@@ -1,5 +1,6 @@
 <script>
 	import { reveal } from "./reveal.js";
+	import CirclesBg from "./CirclesBg.svelte";
 
 	const pillars = [
 		{
@@ -21,49 +22,7 @@
 </script>
 
 <section id="why-us" class="section-wrap why-us">
-	<!-- Animated background shape -->
-	<svg
-		class="why-bg"
-		viewBox="0 0 800 600"
-		aria-hidden="true"
-		xmlns="http://www.w3.org/2000/svg"
-	>
-		<circle
-			cx="400"
-			cy="300"
-			r="280"
-			fill="none"
-			stroke="var(--accent)"
-			stroke-width="1"
-			opacity="0.06"
-			style="transform-origin:400px 300px; animation:spin-slow 60s linear infinite;"
-		/>
-		<circle
-			cx="400"
-			cy="300"
-			r="180"
-			fill="none"
-			stroke="var(--pop)"
-			stroke-width="0.8"
-			opacity="0.05"
-			style="transform-origin:400px 300px; animation:spin-slow-rev 40s linear infinite;"
-		/>
-		<!-- Cross marks -->
-		<g opacity="0.12" stroke="var(--accent)" stroke-width="1.5">
-			<line x1="60" y1="100" x2="60" y2="116" /><line
-				x1="52"
-				y1="108"
-				x2="68"
-				y2="108"
-			/>
-			<line x1="740" y1="480" x2="740" y2="496" /><line
-				x1="732"
-				y1="488"
-				x2="748"
-				y2="488"
-			/>
-		</g>
-	</svg>
+	<CirclesBg />
 
 	<div class="inner">
 		<!-- Top: asymmetric split -->
@@ -115,24 +74,34 @@
 				</div>
 			{/each}
 		</div>
+	</div>
 
-		<!-- Stat strip — large numbers as typographic anchors -->
-		<div class="stat-strip" use:reveal={{ delay: 50 }}>
-			<div class="stat">
-				<span class="stat-val">10<span class="stat-unit">+</span></span>
-				<span class="stat-label">Years on Umbraco</span>
-			</div>
-			<div class="stat-div" aria-hidden="true"></div>
-			<div class="stat">
-				<span class="stat-val">80<span class="stat-unit">+</span></span>
-				<span class="stat-label">Sites launched</span>
-			</div>
-			<div class="stat-div" aria-hidden="true"></div>
-			<div class="stat">
-				<span class="stat-val">100<span class="stat-unit">%</span></span
-				>
-				<span class="stat-label">Delivery rate</span>
-			</div>
+	<!-- Marquee stat strip -->
+	<div class="stat-strip" aria-label="Key stats">
+		<div class="stat-track">
+			{#each Array(4) as _}
+				<div class="stat-item">
+					<span class="stat-val"
+						>10<span class="stat-unit">+</span></span
+					>
+					<span class="stat-label">Years on Umbraco</span>
+				</div>
+				<span class="stat-sep" aria-hidden="true">—</span>
+				<div class="stat-item">
+					<span class="stat-val"
+						>80<span class="stat-unit">+</span></span
+					>
+					<span class="stat-label">Sites launched</span>
+				</div>
+				<span class="stat-sep" aria-hidden="true">—</span>
+				<div class="stat-item">
+					<span class="stat-val"
+						>100<span class="stat-unit">%</span></span
+					>
+					<span class="stat-label">Delivery rate</span>
+				</div>
+				<span class="stat-sep" aria-hidden="true">—</span>
+			{/each}
 		</div>
 	</div>
 </section>
@@ -145,22 +114,11 @@
 		border-top: 1px solid var(--border);
 	}
 
-	.why-bg {
-		position: absolute;
-		right: -10%;
-		top: 50%;
-		transform: translateY(-50%);
-		width: 55%;
-		height: auto;
-		pointer-events: none;
-		opacity: 0.7;
-	}
-
 	.inner {
 		position: relative;
-		z-index: 1;
-		max-width: clamp(320px, 92vw, 1400px);
-		margin: 0 auto;
+		z-index: 2;
+		max-width: clamp(320px, 95vw, 2500px);
+		margin: 0 auto 50px;
 		display: flex;
 		flex-direction: column;
 		gap: clamp(48px, 7vw, 96px);
@@ -187,9 +145,9 @@
 
 	.intro-text {
 		font-size: clamp(16px, 1.4vw, 19px);
-		color: var(--text-2);
-		line-height: 1.72;
-		margin-bottom: 32px;
+		color: var(--white);
+		line-height: 1.7;
+		margin-bottom: 30px;
 
 		strong {
 			color: var(--text);
@@ -208,6 +166,10 @@
 		display: flex;
 		flex-direction: column;
 		gap: 14px;
+		padding: 20px;
+		background: var(--bg);
+		border: 1px solid var(--glass-border);
+		border-radius: var(--radius-card);
 
 		&-num {
 			font-family: var(--heading);
@@ -238,51 +200,75 @@
 		}
 	}
 
-	/* ── Stat strip ─────────────────────────── */
-	.stat {
+	/* ── Stat marquee ───────────────────────── */
+	.stat-strip {
+		overflow: hidden;
+		border-top: 1px solid var(--border);
+		padding: 28px 0;
+		background: var(--surface);
+		margin-top: 50px;
+		position: absolute;
+		bottom: 0;
+		width: 100%;
+		left: 0;
+		background: var(--bg);
+	}
+
+	.stat-track {
 		display: flex;
-		flex-direction: column;
-		gap: 4px;
+		align-items: center;
+		gap: 48px;
+		width: max-content;
+		animation: marquee 24s linear infinite;
 
-		&-strip {
-			display: flex;
-			align-items: center;
-			gap: 40px;
-			padding: 40px;
-			background: var(--surface);
-			border: 1px solid var(--border);
-			border-radius: var(--radius-card);
-			flex-wrap: wrap;
+		&:hover {
+			animation-play-state: paused;
 		}
+	}
 
-		&-val {
-			font-family: var(--heading);
-			font-size: clamp(40px, 5vw, 64px);
-			font-weight: 900;
-			color: var(--text);
-			line-height: 1;
-			letter-spacing: -2px;
+	@keyframes marquee {
+		from {
+			transform: translateX(0);
 		}
+		to {
+			transform: translateX(-25%);
+		}
+	}
 
-		&-unit {
-			font-size: 0.55em;
-			color: var(--accent);
-		}
+	.stat-item {
+		display: flex;
+		align-items: baseline;
+		gap: 12px;
+		flex-shrink: 0;
+	}
 
-		&-label {
-			font-size: 13px;
-			color: var(--text-2);
-			font-weight: 500;
-			text-transform: uppercase;
-			letter-spacing: 1px;
-		}
+	.stat-val {
+		font-family: var(--heading);
+		font-size: clamp(28px, 3vw, 42px);
+		font-weight: 900;
+		color: var(--text);
+		line-height: 1;
+		letter-spacing: -1.5px;
+	}
 
-		&-div {
-			width: 1px;
-			height: 52px;
-			background: var(--border);
-			flex-shrink: 0;
-		}
+	.stat-unit {
+		font-size: 0.55em;
+		color: var(--accent);
+	}
+
+	.stat-label {
+		font-size: 13px;
+		color: var(--text-2);
+		font-weight: 500;
+		text-transform: uppercase;
+		letter-spacing: 1px;
+	}
+
+	.stat-sep {
+		color: var(--accent);
+		font-size: 20px;
+		opacity: 0.4;
+		flex-shrink: 0;
 	}
 
 	/* ── Responsive ─────────────────────────── */
@@ -294,17 +280,9 @@
 			grid-template-columns: 1fr;
 			gap: 32px;
 		}
-		.stat-strip {
-			flex-direction: column;
-			align-items: flex-start;
-			gap: 24px;
-		}
-		.stat-div {
-			display: none;
-		}
 		.why-bg {
-			width: 80%;
-			opacity: 0.3;
+			top: 20%;
+			transform: translateY(-20%);
 		}
 	}
 </style>

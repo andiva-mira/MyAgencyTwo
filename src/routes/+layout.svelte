@@ -2,6 +2,7 @@
 	import "../app.scss";
 	import { onMount } from "svelte";
 	import Lenis from "lenis";
+	import { lenisStore } from "$lib/stores.js";
 
 	const { children } = $props();
 
@@ -10,6 +11,7 @@
 			duration: 1.2,
 			easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
 		});
+		lenisStore.set(lenis);
 
 		function raf(/** @type {number} */ time) {
 			lenis.raf(time);

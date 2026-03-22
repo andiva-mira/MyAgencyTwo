@@ -1,4 +1,6 @@
 import { s as head } from "../../chunks/index-server.js";
+import "../../chunks/index-server2.js";
+import "../../chunks/stores.js";
 import "lenis";
 //#region src/routes/+layout.svelte
 function _layout($$renderer, $$props) {

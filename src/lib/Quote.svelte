@@ -300,7 +300,7 @@
   .inner {
     position: relative;
     z-index: 1;
-    max-width: clamp(320px, 92vw, 1400px);
+    max-width: clamp(320px, 95vw, 2500px);
     margin: 0 auto;
     display: grid;
     grid-template-columns: 1fr 1.2fr;

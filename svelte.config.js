@@ -8,8 +8,8 @@ export default {
     adapter: adapter(),
     prerender: {
       handleHttpError: ({ path, message }) => {
-        // Ignore 404s for static assets in public/ (favicon, icons, etc.)
-        if (path.startsWith('/favicon') || path.startsWith('/icons')) return;
+        // Ignore 404s for static assets in public/ (favicon, etc.)
+        if (path.startsWith('/favicon')) return;
         throw new Error(message);
       },
     },

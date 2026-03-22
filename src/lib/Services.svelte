@@ -126,13 +126,14 @@
       -->
       <svg
         class="pipe-bg"
+        use:reveal={{ y: 0, duration: 900, rootMargin: '-5% 0px -5% 0px' }}
         viewBox={vb}
         preserveAspectRatio="none"
         aria-hidden="true"
         xmlns="http://www.w3.org/2000/svg"
       >
         <!-- ── Outer glow / shadow layer ── -->
-        <g
+        <!-- <g
           fill="none"
           stroke="var(--accent)"
           stroke-linecap="round"
@@ -148,7 +149,7 @@
           <path d="M600,450 L600,720" />
           <path d="M{bW - 30},-60 L{bW - 30},{bH + 60}" />
           <path d="M{bW * 0.7},-60 L{bW * 0.7},{bH + 60}" />
-        </g>
+        </g> -->
 
         <!-- ── Pipe body layer ── -->
         <g
@@ -156,8 +157,8 @@
           stroke="var(--accent)"
           stroke-linecap="round"
           stroke-linejoin="round"
-          stroke-width="6"
-          opacity="0.22"
+          stroke-width="4"
+          opacity="0.25"
         >
           <path
             d="M293,-60 L293,185 A40,40,0,0,0,333,225 L867,225 A40,40,0,0,1,907,265 L907,410 A40,40,0,0,1,867,450 L333,450 A40,40,0,0,0,293,490 L293,720"
@@ -170,7 +171,7 @@
         </g>
 
         <!-- ── Inner highlight (top-lit) ── -->
-        <g
+        <!-- <g
           fill="none"
           stroke="white"
           stroke-linecap="round"
@@ -186,15 +187,15 @@
           <path d="M600,450 L600,720" />
           <path d="M{bW - 30},-60 L{bW - 30},{bH + 60}" />
           <path d="M{bW * 0.7},-60 L{bW * 0.7},{bH + 60}" />
-        </g>
+        </g> -->
 
         <!-- ── Animated flow dashes ── -->
         <g
           fill="none"
           stroke="var(--accent)"
           stroke-linecap="round"
-          stroke-width="2"
-          opacity="0.40"
+          stroke-width="1"
+          opacity="0.8"
         >
           <path
             d="M293,-60 L293,185 A40,40,0,0,0,333,225 L867,225 A40,40,0,0,1,907,265 L907,410 A40,40,0,0,1,867,450 L333,450 A40,40,0,0,0,293,490 L293,720"
@@ -268,41 +269,41 @@
         <g
           fill="var(--bg-2)"
           stroke="var(--accent)"
-          stroke-width="2.5"
-          opacity="0.45"
+          stroke-width="4"
+          opacity="0.4"
         >
           <!-- Entry / exit caps -->
-          <circle cx="293" cy="-60" r="9" />
-          <circle cx="907" cy="-60" r="9" />
-          <circle cx="-60" cy="450" r="9" />
-          <circle cx="293" cy="720" r="9" />
-          <circle cx="600" cy="720" r="9" />
+          <circle cx="293" cy="-60" r="6" />
+          <circle cx="907" cy="-60" r="6" />
+          <circle cx="-60" cy="450" r="6" />
+          <circle cx="293" cy="720" r="6" />
+          <circle cx="600" cy="720" r="6" />
           <!-- Bleeding joints below grid -->
-          <circle cx={bW - 30} cy={bH + 60} r="9" />
-          <circle cx={bW * 0.7} cy={bH + 60} r="9" />
+          <circle cx={bW - 30} cy={bH + 60} r="6" />
+          <circle cx={bW * 0.7} cy={bH + 60} r="6" />
         </g>
       </svg>
 
       <!-- Simplified snake pipe for mobile — fully dynamic coords -->
       <svg
         class="pipe-bg-mobile"
+        use:reveal={{ y: 0, duration: 900, rootMargin: '-5% 0px -5% 0px' }}
         viewBox={vb}
         preserveAspectRatio="none"
         aria-hidden="true"
-        xmlns="http://www.w3.org/2000/svg"
       >
         <!-- ── Outer glow ── -->
-        <g fill="none" stroke="var(--accent)" stroke-linecap="round" stroke-linejoin="round" stroke-width="14" opacity="0.06">
+        <!-- <g fill="none" stroke="var(--accent)" stroke-linecap="round" stroke-linejoin="round" stroke-width="14" opacity="0.06">
           <path d="M{bW*0.25},-60 L{bW*0.25},{bH*0.33-40} A40,40,0,0,0,{bW*0.25+40},{bH*0.33} L{bW*0.75-40},{bH*0.33} A40,40,0,0,1,{bW*0.75},{bH*0.33+40} L{bW*0.75},{bH*0.67-40} A40,40,0,0,1,{bW*0.75-40},{bH*0.67} L{bW*0.25+40},{bH*0.67} A40,40,0,0,0,{bW*0.25},{bH*0.67+40} L{bW*0.25},{bH+60}" />
-        </g>
+        </g> -->
         <!-- ── Pipe body ── -->
-        <g fill="none" stroke="var(--accent)" stroke-linecap="round" stroke-linejoin="round" stroke-width="6" opacity="0.22">
+        <g fill="none" stroke="var(--accent)" stroke-linecap="round" stroke-linejoin="round" stroke-width="4" opacity="0.25">
           <path d="M{bW*0.25},-60 L{bW*0.25},{bH*0.33-40} A40,40,0,0,0,{bW*0.25+40},{bH*0.33} L{bW*0.75-40},{bH*0.33} A40,40,0,0,1,{bW*0.75},{bH*0.33+40} L{bW*0.75},{bH*0.67-40} A40,40,0,0,1,{bW*0.75-40},{bH*0.67} L{bW*0.25+40},{bH*0.67} A40,40,0,0,0,{bW*0.25},{bH*0.67+40} L{bW*0.25},{bH+60}" />
         </g>
         <!-- ── Inner highlight ── -->
-        <g fill="none" stroke="white" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" opacity="0.10">
+        <!-- <g fill="none" stroke="white" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" opacity="0.10">
           <path d="M{bW*0.25},-60 L{bW*0.25},{bH*0.33-40} A40,40,0,0,0,{bW*0.25+40},{bH*0.33} L{bW*0.75-40},{bH*0.33} A40,40,0,0,1,{bW*0.75},{bH*0.33+40} L{bW*0.75},{bH*0.67-40} A40,40,0,0,1,{bW*0.75-40},{bH*0.67} L{bW*0.25+40},{bH*0.67} A40,40,0,0,0,{bW*0.25},{bH*0.67+40} L{bW*0.25},{bH+60}" />
-        </g>
+        </g> -->
         <!-- ── Animated flow dashes ── -->
         <g fill="none" stroke="var(--accent)" stroke-linecap="round" stroke-width="2" opacity="0.40">
           <path
@@ -321,7 +322,7 @@
       </svg>
 
       {#each services as svc, i}
-        <div class="svc-cell glass" use:reveal={{ delay: i * 80 }}>
+        <div class="svc-cell glass" use:reveal={{ delay: i * 120, y: 40, rootMargin: '-5% 0px -5% 0px' }}>
           <article class="svc-card">
             <div class="card-top">
               <span class="card-num">{svc.label}</span>
@@ -360,7 +361,7 @@
   .inner {
     position: relative;
     z-index: 1;
-    max-width: clamp(320px, 92vw, 1400px);
+    max-width: clamp(320px, 95vw, 2500px);
     margin: 0 auto;
   }
 

@@ -2,6 +2,8 @@
 	// @ts-nocheck
 	import { onMount } from "svelte";
 	import * as THREE from "three";
+	import BeamFollower from "./BeamFollower.svelte";
+
 
 	let gemCanvas;
 	let heroSection;
@@ -9,13 +11,7 @@
 	let gemWrap;
 	let ctaRow;
 
-	// Glow follower state
-	let glowX = -9999;
-	let glowY = -9999;
-	let glowActive = false;
 	let rafId;
-	let targetX = -9999;
-	let targetY = -9999;
 
 	// Parallax state — normalized mouse offset from center (-1 to 1)
 	let pNX = 0,
@@ -25,14 +21,17 @@
 	let pTargetNX = 0,
 		pTargetNY = 0;
 
+	let gemHovered = false;
+	let shatterProgress = 0;
+
+	// Set by onMount — used in handleMouseMove for raycasting
+	let checkGemHover = null;
+
 	function lerp(a, b, t) {
 		return a + (b - a) * t;
 	}
 
 	function tick() {
-		glowX = lerp(glowX, targetX, 0.08);
-		glowY = lerp(glowY, targetY, 0.08);
-
 		pNX = lerp(pNX, pTargetNX, 0.07);
 		pNY = lerp(pNY, pTargetNY, 0.07);
 		pGemNX = lerp(pGemNX, pTargetNX, 0.04);
@@ -53,25 +52,15 @@
 
 	function handleMouseMove(e) {
 		const rect = heroSection.getBoundingClientRect();
-		targetX = e.clientX - rect.left;
-		targetY = e.clientY - rect.top;
-
 		pTargetNX = ((e.clientX - rect.left) / rect.width - 0.5) * 2;
 		pTargetNY = ((e.clientY - rect.top) / rect.height - 0.5) * 2;
-
-		if (!glowActive) {
-			glowX = targetX;
-			glowY = targetY;
-			glowActive = true;
-		}
+		if (checkGemHover) checkGemHover(e.clientX, e.clientY);
 	}
 
 	function handleMouseLeave() {
-		glowActive = false;
-		targetX = -9999;
-		targetY = -9999;
 		pTargetNX = 0;
 		pTargetNY = 0;
+		gemHovered = false;
 	}
 
 	onMount(() => {
@@ -99,16 +88,6 @@
 		const DARK_EMISSIVE = 0x051510;
 		const LIGHT_EMISSIVE = 0x2a7a64;
 
-		const applyTheme = () => {
-			const light = isLight();
-			faceMat.color.setHex(light ? LIGHT_COLOR : DARK_COLOR);
-			faceMat.emissive.setHex(light ? LIGHT_EMISSIVE : DARK_EMISSIVE);
-			faceMat.opacity = light ? 0.85 : 0.15;
-			edgeMat.color.setHex(light ? 0x0a9e82 : 0x1feec8);
-			edgeMat.opacity = light ? 0.6 : 0.45;
-			ambientLight.intensity = light ? 1.2 : 0.15;
-		};
-
 		const faceMat = new THREE.MeshPhongMaterial({
 			color: DARK_COLOR,
 			emissive: DARK_EMISSIVE,
@@ -119,7 +98,6 @@
 			side: THREE.DoubleSide,
 		});
 		const gem = new THREE.Mesh(geo, faceMat);
-		scene.add(gem);
 
 		const edges = new THREE.EdgesGeometry(geo, 12);
 		const edgeMat = new THREE.LineBasicMaterial({
@@ -128,6 +106,21 @@
 			opacity: 0.45,
 		});
 		gem.add(new THREE.LineSegments(edges, edgeMat));
+
+		// Wrap gem in a group so we can animate the group
+		const gemGroup = new THREE.Group();
+		gemGroup.add(gem);
+		scene.add(gemGroup);
+
+		const applyTheme = () => {
+			const light = isLight();
+			faceMat.color.setHex(light ? LIGHT_COLOR : DARK_COLOR);
+			faceMat.emissive.setHex(light ? LIGHT_EMISSIVE : DARK_EMISSIVE);
+			faceMat.opacity = light ? 0.85 : 0.15;
+			edgeMat.color.setHex(light ? 0x0a9e82 : 0x1feec8);
+			edgeMat.opacity = light ? 0.6 : 0.45;
+			ambientLight.intensity = light ? 1.2 : 0.15;
+		};
 
 		const ambientLight = new THREE.AmbientLight(0xffffff, 0.15);
 		scene.add(ambientLight);
@@ -150,14 +143,121 @@
 		rim.position.set(0, -3, 1);
 		scene.add(rim);
 
-		let frameId,
-			t = 0;
+		// ── Gem hover via raycasting (bypasses z-index blocking) ─────
+		const raycaster = new THREE.Raycaster();
+		const rayMouse = new THREE.Vector2();
+
+		// Invisible sphere that acts as a stable hit-area for the gem.
+		// Stays at origin even while the gem shatters, so hover is reliable.
+		const hitSphere = new THREE.Mesh(
+			new THREE.SphereGeometry(1.05, 8, 8),
+			new THREE.MeshBasicMaterial({ transparent: true, opacity: 0 })
+		);
+		gemGroup.add(hitSphere);
+
+		checkGemHover = (clientX, clientY) => {
+			const rect = gemCanvas.getBoundingClientRect();
+			// Mouse outside canvas bounds → not hovering gem
+			if (clientX < rect.left || clientX > rect.right ||
+				clientY < rect.top  || clientY > rect.bottom) {
+				gemHovered = false;
+				return;
+			}
+			rayMouse.x =  ((clientX - rect.left) / rect.width)  * 2 - 1;
+			rayMouse.y = -((clientY - rect.top)  / rect.height) * 2 + 1;
+			raycaster.setFromCamera(rayMouse, camera);
+			gemHovered = raycaster.intersectObject(hitSphere).length > 0;
+		};
+
+		// ── Fragment extraction ───────────────────────────────────────
+		function createFragments(geometry, baseFaceMat) {
+			const pos = geometry.attributes.position;
+			const index = geometry.index;
+			const count = index ? index.count : pos.count;
+			const frags = [];
+
+			for (let i = 0; i < count; i += 3) {
+				const ia = index ? index.getX(i)   : i;
+				const ib = index ? index.getX(i+1) : i+1;
+				const ic = index ? index.getX(i+2) : i+2;
+
+				const verts = new Float32Array([
+					pos.getX(ia), pos.getY(ia), pos.getZ(ia),
+					pos.getX(ib), pos.getY(ib), pos.getZ(ib),
+					pos.getX(ic), pos.getY(ic), pos.getZ(ic),
+				]);
+				const triGeo = new THREE.BufferGeometry();
+				triGeo.setAttribute('position', new THREE.BufferAttribute(verts, 3));
+				triGeo.computeVertexNormals();
+
+				const mat = baseFaceMat.clone();
+				mat.opacity = baseFaceMat.opacity * 1.8;
+				const mesh = new THREE.Mesh(triGeo, mat);
+
+				const edgeGeo = new THREE.EdgesGeometry(triGeo);
+				const edgeLine = new THREE.LineSegments(edgeGeo, new THREE.LineBasicMaterial({
+					color: 0x1feec8, transparent: true, opacity: 0.6
+				}));
+				mesh.add(edgeLine);
+
+				const cx = (verts[0] + verts[3] + verts[6]) / 3;
+				const cy = (verts[1] + verts[4] + verts[7]) / 3;
+				const cz = (verts[2] + verts[5] + verts[8]) / 3;
+				const dir = new THREE.Vector3(cx, cy, cz).normalize();
+				const dist = 1.5 + Math.random() * 1.0;
+
+				frags.push({
+					mesh,
+					origin: new THREE.Vector3(0, 0, 0),
+					target: dir.multiplyScalar(dist),
+					targetRot: new THREE.Euler(
+						(Math.random() - 0.5) * Math.PI * 1.5,
+						(Math.random() - 0.5) * Math.PI * 1.5,
+						(Math.random() - 0.5) * Math.PI,
+					),
+					edgeGeo,
+					edgeLine,
+				});
+			}
+			return frags;
+		}
+
+		const ease = p => 1 - Math.pow(1 - p, 3);
+
+		const fragments = createFragments(geo, faceMat);
+		fragments.forEach(f => { f.mesh.visible = false; gemGroup.add(f.mesh); });
+
+		// ── Animate loop ──────────────────────────────────────────────
+		let frameId, t = 0;
 		function animate() {
 			frameId = requestAnimationFrame(animate);
 			t += 0.007;
-			gem.rotation.y += 0.003;
-			gem.rotation.x = Math.sin(t * 0.35) * 0.28;
-			gem.position.y = Math.sin(t * 0.65) * 0.22;
+
+			gemGroup.rotation.y += 0.003;
+			gemGroup.rotation.x = Math.sin(t * 0.35) * 0.28;
+			gemGroup.position.y = Math.sin(t * 0.65) * 0.22;
+
+			if (gemHovered) {
+				shatterProgress = Math.min(1, shatterProgress + 0.05);
+			} else {
+				shatterProgress = Math.max(0, shatterProgress - 0.035);
+			}
+
+			if (shatterProgress > 0.05) {
+				gem.visible = false;
+				const eased = ease(shatterProgress);
+				fragments.forEach(f => {
+					f.mesh.visible = true;
+					f.mesh.position.lerpVectors(f.origin, f.target, eased);
+					f.mesh.rotation.x = lerp(0, f.targetRot.x, eased);
+					f.mesh.rotation.y = lerp(0, f.targetRot.y, eased);
+					f.mesh.rotation.z = lerp(0, f.targetRot.z, eased);
+				});
+			} else {
+				gem.visible = true;
+				fragments.forEach(f => { f.mesh.visible = false; });
+			}
+
 			renderer.render(scene, camera);
 		}
 		animate();
@@ -167,8 +267,17 @@
 		return () => {
 			cancelAnimationFrame(frameId);
 			cancelAnimationFrame(rafId);
+			checkGemHover = null;
 			renderer.dispose();
 			observer.disconnect();
+			hitSphere.geometry.dispose();
+			hitSphere.material.dispose();
+			fragments.forEach(f => {
+				f.edgeGeo.dispose();
+				f.edgeLine.material.dispose();
+				f.mesh.geometry.dispose();
+				f.mesh.material.dispose();
+			});
 		};
 	});
 </script>
@@ -181,15 +290,15 @@
 	on:mousemove={handleMouseMove}
 	on:mouseleave={handleMouseLeave}
 >
-	<div class="hero-mouse-area" aria-hidden="true">
-		<div
-			class="glow-follower"
-			class:glow-active={glowActive}
-			style="left:{glowX}px; top:{glowY}px;"
-		></div>
-	</div>
+	<BeamFollower />
+
 	<!-- Floating 3D WebGL gem -->
-	<div class="gem-wrap" bind:this={gemWrap} aria-hidden="true">
+	<div
+		class="gem-wrap"
+		class:gem-hovered={gemHovered}
+		bind:this={gemWrap}
+		aria-hidden="true"
+	>
 		<canvas bind:this={gemCanvas} class="gem-canvas"></canvas>
 	</div>
 
@@ -299,50 +408,6 @@
 			clamp(80px, 10vh, 120px);
 	}
 
-	/* ── Mouse glow follower ─────────────────── */
-	.hero-mouse-area {
-		position: absolute;
-		inset: 0;
-		pointer-events: none;
-		z-index: 2;
-	}
-
-	.glow-follower {
-		position: absolute;
-		width: 260px;
-		height: 260px;
-		border-radius: 50%;
-		pointer-events: none;
-		transform: translate(-50%, -50%) scale(0);
-		background: radial-gradient(
-			circle,
-			rgba(31, 238, 200, 0.25) 0%,
-			rgba(31, 238, 200, 0.1) 35%,
-			rgba(31, 238, 200, 0.03) 60%,
-			transparent 75%
-		);
-		opacity: 0;
-		transition:
-			opacity 0.4s ease,
-			transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
-	}
-
-	.glow-follower.glow-active {
-		opacity: 1;
-		transform: translate(-50%, -50%) scale(1);
-		animation: glow-pulse 2.4s ease-in-out infinite;
-	}
-
-	@keyframes glow-pulse {
-		0%,
-		100% {
-			opacity: 1;
-		}
-		50% {
-			opacity: 0.7;
-		}
-	}
-
 	/* ── 3D gem background ───────────────────── */
 	.gem-wrap {
 		position: absolute;
@@ -350,8 +415,14 @@
 		top: 50%;
 		transform: translateY(-50%);
 		z-index: 0;
-		pointer-events: none;
+		pointer-events: auto;
 		will-change: transform;
+		cursor: default;
+		transition: cursor 0.1s;
+	}
+
+	.gem-wrap.gem-hovered {
+		cursor: crosshair;
 	}
 
 	.gem-canvas {
@@ -361,10 +432,11 @@
 		background: transparent;
 	}
 
+
 	.hero-inner {
 		position: relative;
 		z-index: 1;
-		max-width: clamp(320px, 92vw, 1400px);
+		max-width: clamp(320px, 95vw, 2500px);
 		margin: 0 auto;
 		width: 100%;
 		display: grid;

@@ -2469,6 +2469,25 @@ function untrack(fn) {
 	}
 }
 //#endregion
+//#region node_modules/svelte/src/store/utils.js
+/** @import { Readable } from './public' */
+/**
+* @template T
+* @param {Readable<T> | null | undefined} store
+* @param {(value: T) => void} run
+* @param {(value: T) => void} [invalidate]
+* @returns {() => void}
+*/
+function subscribe_to_store(store, run, invalidate) {
+	if (store == null) {
+		run(void 0);
+		if (invalidate) invalidate(void 0);
+		return noop;
+	}
+	const unsub = untrack(() => store.subscribe(run, invalidate));
+	return unsub.unsubscribe ? () => unsub.unsubscribe() : unsub;
+}
+//#endregion
 //#region node_modules/svelte/src/store/shared/index.js
 /** @import { Readable, StartStopNotifier, Subscriber, Unsubscriber, Updater, Writable } from '../public.js' */
 /** @import { Stores, StoresValues, SubscribeInvalidateTuple } from '../private.js' */
@@ -3813,6 +3832,33 @@ function attr_style(value, directives) {
 	var result = to_style(value, directives);
 	return result ? ` style="${escape_html(result, true)}"` : "";
 }
+/**
+* @template V
+* @param {Record<string, [any, any, any]>} store_values
+* @param {string} store_name
+* @param {Store<V> | null | undefined} store
+* @returns {V}
+*/
+function store_get(store_values, store_name, store) {
+	if (store_name in store_values && store_values[store_name][0] === store) return store_values[store_name][2];
+	store_values[store_name]?.[1]();
+	store_values[store_name] = [
+		store,
+		null,
+		void 0
+	];
+	const unsub = subscribe_to_store(
+		store,
+		/** @param {any} v */
+		(v) => store_values[store_name][2] = v
+	);
+	store_values[store_name][1] = unsub;
+	return store_values[store_name][2];
+}
+/** @param {Record<string, [any, any, any]>} store_values */
+function unsubscribe_stores(store_values) {
+	for (const store_name of Object.keys(store_values)) store_values[store_name][1]();
+}
 /** @param {any} array_like_or_iterator */
 function ensure_array_like(array_like_or_iterator) {
 	if (array_like_or_iterator) return array_like_or_iterator.length !== void 0 ? array_like_or_iterator : Array.from(array_like_or_iterator);
@@ -3975,4 +4021,4 @@ function fork() {
 async function tick() {}
 async function settled() {}
 //#endregion
-export { set as A, set_hydrating as B, component_root as C, get_next_sibling as D, get_first_child as E, push$1 as F, hydration_failed as G, lifecycle_double_unmount as H, async_mode_flag as I, array_from as J, LEGACY_PROPS as K, hydrate_node as L, flushSync as M, component_context as N, init_operations as O, pop$1 as P, hydrating as R, set_active_reaction as S, create_text as T, state_proxy_unmount as U, hydration_mismatch as V, HYDRATION_ERROR as W, noop as X, define_property as Y, run as Z, writable as _, derived as a, get as b, render as c, getContext as d, setContext as f, readable as g, is_passive_event as h, attr_style as i, boundary as j, mutable_source as k, stringify as l, escape_html as m, tick as n, ensure_array_like as o, attr as p, STATE_SYMBOL as q, attr_class as r, head as s, index_server_exports as t, html as u, active_effect as v, clear_text_content as w, set_active_effect as x, active_reaction as y, set_hydrate_node as z };
+export { run as $, init_operations as A, hydrating as B, set_active_effect as C, create_text as D, clear_text_content as E, component_context as F, state_proxy_unmount as G, set_hydrating as H, pop$1 as I, LEGACY_PROPS as J, HYDRATION_ERROR as K, push$1 as L, set as M, boundary as N, get_first_child as O, flushSync as P, noop as Q, async_mode_flag as R, get as S, component_root as T, hydration_mismatch as U, set_hydrate_node as V, lifecycle_double_unmount as W, array_from as X, STATE_SYMBOL as Y, define_property as Z, is_passive_event as _, derived as a, active_effect as b, render as c, unsubscribe_stores as d, html as f, escape_html as g, attr as h, attr_style as i, mutable_source as j, get_next_sibling as k, store_get as l, setContext as m, tick as n, ensure_array_like as o, getContext as p, hydration_failed as q, attr_class as r, head as s, index_server_exports as t, stringify as u, readable as v, set_active_reaction as w, active_reaction as x, writable as y, hydrate_node as z };

@@ -22,6 +22,10 @@
     "file": "chunks/index-server.js",
     "name": "index-server"
   },
+  "_index-server2.js": {
+    "file": "chunks/index-server2.js",
+    "name": "index-server"
+  },
   "_internal.js": {
     "file": "chunks/internal.js",
     "name": "internal",
@@ -32,6 +36,13 @@
   "_shared.js": {
     "file": "chunks/shared.js",
     "name": "shared"
+  },
+  "_stores.js": {
+    "file": "chunks/stores.js",
+    "name": "stores",
+    "imports": [
+      "_index-server.js"
+    ]
   },
   "_utils.js": {
     "file": "chunks/utils.js",
@@ -62,7 +73,8 @@
       "_environment.js",
       "_internal.js",
       "_exports.js",
-      "_shared.js"
+      "_shared.js",
+      "_index-server2.js"
     ]
   },
   "node_modules/@sveltejs/kit/src/runtime/server/index.js": {
@@ -76,7 +88,8 @@
       "_internal.js",
       "_utils.js",
       "_exports.js",
-      "_shared.js"
+      "_shared.js",
+      "_index-server2.js"
     ]
   },
   "src/routes/+layout.js": {
@@ -91,10 +104,12 @@
     "src": "src/routes/+layout.svelte",
     "isEntry": true,
     "imports": [
-      "_index-server.js"
+      "_index-server.js",
+      "_index-server2.js",
+      "_stores.js"
     ],
     "css": [
-      "_app/immutable/assets/_layout.CFVtHnSZ.css"
+      "_app/immutable/assets/_layout.BerxxB5Q.css"
     ]
   },
   "src/routes/+page.svelte": {
@@ -103,10 +118,12 @@
     "src": "src/routes/+page.svelte",
     "isEntry": true,
     "imports": [
-      "_index-server.js"
+      "_index-server.js",
+      "_index-server2.js",
+      "_stores.js"
     ],
     "css": [
-      "_app/immutable/assets/_page.BP__v1rU.css"
+      "_app/immutable/assets/_page.UsljAmFx.css"
     ]
   }
 }

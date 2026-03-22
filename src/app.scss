@@ -180,16 +180,15 @@ a {
 }
 
 .btn-outline {
-  background: transparent;
+  background: var(--accent-dim);
   color: var(--text);
-  border: 1.5px solid var(--border);
+  border: 1.5px solid var(--accent);
   padding: 12px 26px;
 }
 
 .btn-outline:hover {
-  border-color: var(--accent);
-  color: var(--accent);
-  background: var(--accent-dim);
+  color: var(--white);
+  background: var(--accent);
 }
 
 .btn-accent {

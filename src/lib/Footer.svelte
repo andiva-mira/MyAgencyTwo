@@ -80,7 +80,7 @@
   }
 
   .inner {
-    max-width: clamp(320px, 92vw, 1400px);
+    max-width: clamp(320px, 95vw, 2500px);
     margin: 0 auto;
     padding: 0 clamp(24px, 6vw, 96px);
   }
